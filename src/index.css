@@ -41,7 +41,14 @@ html, body, #root {
   width: 1440px;
   height: 900px;
   transform-origin: top left;
-  z-index: 1;          /* sits above the Unicorn scene */
+  z-index: 1;                /* sits above the Unicorn scene */
+  pointer-events: none;      /* pass mouse events through to the canvas below */
+}
+
+/* Re-enable pointer events only on interactive elements */
+.scale-root a,
+.scale-root button {
+  pointer-events: auto;
 }
 
 
