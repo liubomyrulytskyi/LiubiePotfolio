@@ -23,15 +23,10 @@ html, body, #root {
   overflow: hidden;
 }
 
-/* Force the inner div + canvas the library renders to fill the wrapper */
-.unicorn-bg > div {
-  width: 100% !important;
-  height: 100% !important;
-}
-
+/* Canvas fills the fixed wrapper; SDK controls pixel dimensions via attributes */
 .unicorn-bg canvas {
-  width: 100% !important;
-  height: 100% !important;
+  width: 100%;
+  height: 100%;
   display: block;
 }
 
