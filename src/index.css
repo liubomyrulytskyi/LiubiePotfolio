@@ -2,6 +2,23 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Custom fonts ───────────────────────────────────────── */
+@font-face {
+  font-family: 'PP Editorial';
+  src: url('/fonts/PPEditorialNew-Ultralight.woff2') format('woff2');
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'PP Mori';
+  src: url('/fonts/PPMori-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* ─── Reset ─────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -52,7 +69,7 @@ html, body, #root {
   position: absolute;
   top: 13px;
   left: 5px;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'PP Mori', sans-serif;
   font-weight: 600;
   font-size: 64px;
   line-height: 0.75;
@@ -73,7 +90,7 @@ html, body, #root {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'PP Editorial', serif;
   font-weight: 300;
   font-size: 16px;
   line-height: 0.85;
@@ -97,7 +114,7 @@ html, body, #root {
 
 .project-title .bracket {
   flex-shrink: 0;
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'PP Editorial', serif;
   font-weight: 300;
   opacity: 0.6;
 }
@@ -117,7 +134,7 @@ html, body, #root {
 }
 
 .project-year-group .year {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'PP Mori', sans-serif;
   font-weight: 600;
   letter-spacing: -0.08em;
   font-size: 16px;
@@ -126,7 +143,7 @@ html, body, #root {
 }
 
 .project-year-group .bracket-r {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'PP Editorial', serif;
   font-weight: 300;
   opacity: 0.6;
 }
@@ -142,7 +159,7 @@ html, body, #root {
   flex-direction: column;
   align-items: center;
   gap: 16px;
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'PP Editorial', serif;
   font-weight: 300;
   font-size: 16px;
   line-height: 0.85;
@@ -182,7 +199,7 @@ html, body, #root {
 }
 
 .role-title-row .role-title {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'PP Mori', sans-serif;
   font-weight: 600;
   letter-spacing: -0.08em;
   font-size: 12px;
@@ -190,7 +207,7 @@ html, body, #root {
 }
 
 .award-text {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'PP Editorial', serif;
   font-weight: 300;
   font-size: 14px;
   line-height: 0.85;
@@ -249,13 +266,13 @@ html, body, #root {
   font-size: 10px;
   opacity: 0.7;
   flex-shrink: 0;
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'PP Editorial', serif;
   font-weight: 300;
   line-height: 1.4;
 }
 
 .contact-role {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'PP Mori', sans-serif;
   font-weight: 600;
   font-size: 14px;
   letter-spacing: -0.08em;
@@ -264,7 +281,7 @@ html, body, #root {
 }
 
 .email-link {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'PP Editorial', serif;
   font-weight: 300;
   font-size: 16px;
   line-height: 0.85;
@@ -309,7 +326,7 @@ html, body, #root {
 }
 
 .social-link {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'PP Mori', sans-serif;
   font-weight: 600;
   font-size: 16px;
   letter-spacing: -0.08em;
@@ -384,7 +401,7 @@ html, body, #root {
 }
 
 .go-rage-text {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'PP Editorial', serif;
   font-weight: 300;
   font-size: 16px;
   line-height: 0.85;
@@ -424,7 +441,7 @@ html, body, #root {
 }
 
 .disc-text {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'PP Editorial', serif;
   font-weight: 300;
   font-size: 14px;
   line-height: 1;
@@ -433,7 +450,7 @@ html, body, #root {
 }
 
 .disc-sep {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'PP Editorial', serif;
   font-weight: 300;
   font-size: 11px;
   color: black;
@@ -452,7 +469,7 @@ html, body, #root {
   top: 50%;
   left: 14px;
   transform: translateY(-50%);
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'PP Editorial', serif;
   font-weight: 300;
   font-size: 16px;
   line-height: 0.85;

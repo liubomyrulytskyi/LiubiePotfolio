@@ -4,8 +4,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        mori: ['"Space Grotesk"', 'sans-serif'],
-        editorial: ['"Cormorant Garamond"', 'serif'],
+        editorial: ['"PP Editorial"', 'serif'],
+        mori: ['"PP Mori"', 'sans-serif'],
       },
     },
   },
