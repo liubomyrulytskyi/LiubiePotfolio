@@ -21,10 +21,8 @@ const PROJECTS = [
   { name: 'P*P',              year: '2026', nda: true },
 ]
 
-// Ticker items repeated enough for a seamless infinite loop.
-// We render 2× the set and animate translateY(-50%).
-const DISCIPLINES = ['UI/UX', 'Art-Direction', 'Motion']
-const TICKER_ROWS = Array.from({ length: 24 }, (_, i) => DISCIPLINES[i % DISCIPLINES.length])
+// Horizontal ticker — two identical copies so translateX(-50%) loops seamlessly.
+const TICKER_TEXT = 'UI/UX Designer\u00a0*\u00a0Art-direction\u00a0*\u00a0'
 
 export default function App() {
   // ── Layout scale ─────────────────────────────────────────
@@ -177,14 +175,11 @@ export default function App() {
           <span className="go-rage-text">go rage</span>
         </div>
 
-        {/* ── Disciplines vertical ticker (bottom-right) ── */}
+        {/* ── Disciplines horizontal ticker (bottom-right) ── */}
         <div className="disciplines-ticker" aria-label="Disciplines">
           <div className="ticker-track">
-            {TICKER_ROWS.map((item, i) => (
-              <div key={i} className="ticker-item">
-                <span className="disc-text">{item}</span>
-              </div>
-            ))}
+            <span className="disc-text">{TICKER_TEXT}</span>
+            <span className="disc-text">{TICKER_TEXT}</span>
           </div>
         </div>
 
