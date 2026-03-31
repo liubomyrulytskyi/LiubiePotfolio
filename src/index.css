@@ -226,21 +226,26 @@ html, body, #root {
      clips everything below the active max-height boundary.          */
   display: flex;
   flex-direction: column;
-  align-items: flex-start;  /* prevent children from stretching card width */
-  width: fit-content;       /* collapsed: shrinks to photo + info content  */
   gap: 6px;
+  /* Hard-fixed collapsed width — matches Figma: 90px photo + 6px gap + 113px info + 12px padding */
+  width: 221px;
+  min-width: 221px;
+  max-width: 221px;
   overflow: hidden;
-  max-height: 102px;        /* collapsed: 90px photo + 12px padding        */
-  pointer-events: auto;     /* override scale-root pointer-events:none      */
-  cursor: none;             /* custom cursor shown on hover instead         */
+  max-height: 102px;    /* collapsed: 90px photo + 12px padding */
+  pointer-events: auto; /* override scale-root pointer-events:none */
+  cursor: none;         /* custom cursor shown on hover instead   */
+  /* Nav system timing: width → toggle-bar easing, max-height → expandable-content easing */
   transition:
-    width      0.55s cubic-bezier(0.16, 1, 0.3, 1),
-    max-height 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+    width      0.6s cubic-bezier(0.65,  0,    0, 1),
+    max-height 0.6s cubic-bezier(0.625, 0.05, 0, 1);
 }
 
-/* Expanded state — !important overrides the inline locked-width set by JS */
+/* Expanded state — explicit widths; no inline-style locking needed */
 .contact-card[data-contact-status="active"] {
-  width: 480px !important;
+  width: 480px;
+  min-width: 480px;
+  max-width: 480px;
   max-height: 780px;
   cursor: auto;
 }
@@ -499,18 +504,30 @@ html, body, #root {
 }
 
 /* ─── Contact card: expanded view ───────────────────────── */
+/* Container — no opacity here; each inner item fades with nav stagger timing */
 .contact-expanded-view {
   flex-shrink: 0;
-  width: 100%;   /* fills card width (480px) when active */
-  opacity: 0;
+  width: 100%;
   pointer-events: none;
-  /* Fades in after the card has begun expanding (0.3s delay) */
-  transition: opacity 0.35s ease 0.3s;
 }
 
 .contact-card[data-contact-status="active"] .contact-expanded-view {
-  opacity: 1;
   pointer-events: auto;
+}
+
+/* Inner items fade in with nav expandable-content easing.
+   transitionDelay is set per-item by JS (index * 0.05s, base 0.3s). */
+.contact-exp-header,
+.contact-bio,
+.contact-exp-portrait {
+  opacity: 0;
+  transition: opacity 0.6s cubic-bezier(0.625, 0.05, 0, 1);
+}
+
+.contact-card[data-contact-status="active"] .contact-exp-header,
+.contact-card[data-contact-status="active"] .contact-bio,
+.contact-card[data-contact-status="active"] .contact-exp-portrait {
+  opacity: 1;
 }
 
 /* ─── Expanded view: inner structure ────────────────────── */
@@ -669,13 +686,14 @@ html, body, #root {
 /* ─── Background dim when contact is expanded ────────────── */
 /* All surrounding UI elements except role-card (middle highlight)
    transition to opacity 0.3 matching the Figma expanded frame.   */
+/* Nav system dark-background fade timing */
 .hero-name,
 .projects-list,
 .social-links,
 .go-rage,
 .disciplines-ticker,
 .plus-center-left {
-  transition: opacity 0.4s ease;
+  transition: opacity 0.7s cubic-bezier(0.5, 0.5, 0, 1);
 }
 
 .contact-is-expanded .hero-name,

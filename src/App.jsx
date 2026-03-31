@@ -77,25 +77,16 @@ export default function App() {
   const [contactExpanded, setContactExpanded] = useState(false)
   const contactCardRef = useRef(null)
 
+  // Both states have explicit CSS widths (221px ↔ 480px) so no inline-style
+  // locking is needed — the CSS transition animates directly between them.
   const openContact = () => {
-    const card = contactCardRef.current
-    if (!card) return
-    // Lock the natural collapsed width as an inline style so the CSS transition
-    // has a defined start point. The active-state rule uses !important to take
-    // precedence over this inline value when expanding.
-    card.style.width = card.offsetWidth + 'px'
-    void card.offsetWidth // force reflow before state update
+    if (!contactCardRef.current) return
     setContactExpanded(true)
     setCursorVisible(false)
   }
 
   const closeContact = () => {
     setContactExpanded(false)
-    // Once the collapse transition finishes, remove the inline locked-width so
-    // the card returns to natural auto sizing.
-    setTimeout(() => {
-      if (contactCardRef.current) contactCardRef.current.style.width = ''
-    }, 600)
   }
 
   // Close on click outside — only active when expanded
@@ -119,6 +110,17 @@ export default function App() {
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
   }, [contactExpanded]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Nav-system stagger on expanded inner items ────────────
+  // Mirrors: navigationInnerItems.forEach((item, i) => item.style.transitionDelay = `${i * 0.05}s`)
+  // Base offset of 0.3s lets the card expand before content fades in.
+  useEffect(() => {
+    const card = contactCardRef.current
+    if (!card) return
+    card.querySelectorAll('[data-contact-item]').forEach((el, i) => {
+      el.style.transitionDelay = `${0.3 + i * 0.05}s`
+    })
+  }, []) // set once on mount — delays are static
 
   // ── Custom expand cursor ──────────────────────────────────
   // Rendered in fixed/screen space outside scale-root so it
@@ -239,7 +241,7 @@ export default function App() {
               <div className="contact-exp-top">
 
                 {/* Header: role + location + email (90px tall, flex-col justify-between) */}
-                <div className="contact-exp-header">
+                <div className="contact-exp-header" data-contact-item>
                   <div className="contact-exp-role-block">
                     <span className="contact-exp-plus" aria-hidden="true">+</span>
                     <div className="contact-exp-role-stack">
@@ -257,7 +259,7 @@ export default function App() {
                 </div>
 
                 {/* Bio text — PP Editorial Ultralight */}
-                <p className="contact-bio">
+                <p className="contact-bio" data-contact-item>
                   Curious mind. Sharp thinking. A constant urge to question how things work
                   and rebuild them better. Complex ideas turned into clear structures and
                   bold digital interfaces that actually serve a purpose.
@@ -269,7 +271,7 @@ export default function App() {
               </div>
 
               {/* Portrait section */}
-              <div className="contact-exp-portrait">
+              <div className="contact-exp-portrait" data-contact-item>
                 <img src={PORTRAIT_URL}    alt="" className="contact-exp-portrait-color" />
                 <img src={PORTRAIT_BW_URL} alt="" className="contact-exp-portrait-bw"    />
               </div>
