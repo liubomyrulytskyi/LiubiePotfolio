@@ -226,11 +226,13 @@ html, body, #root {
      clips everything below the active max-height boundary.          */
   display: flex;
   flex-direction: column;
+  align-items: flex-start;  /* prevent children from stretching card width */
+  width: fit-content;       /* collapsed: shrinks to photo + info content  */
   gap: 6px;
   overflow: hidden;
-  max-height: 102px;      /* collapsed: 90px photo + 12px padding  */
-  pointer-events: auto;   /* override scale-root pointer-events:none */
-  cursor: none;           /* custom cursor shown on hover instead   */
+  max-height: 102px;        /* collapsed: 90px photo + 12px padding        */
+  pointer-events: auto;     /* override scale-root pointer-events:none      */
+  cursor: none;             /* custom cursor shown on hover instead         */
   transition:
     width      0.55s cubic-bezier(0.16, 1, 0.3, 1),
     max-height 0.65s cubic-bezier(0.16, 1, 0.3, 1);
@@ -317,9 +319,9 @@ html, body, #root {
   width: 100%;
   height: 1px;
   background: white;
-  transform-origin: left;
+  transform-origin: left;   /* anchor left → right side retracts first on hover */
   transform: scaleX(1);
-  transition: transform 0.3s ease;
+  transition: transform 0.4s ease;
 }
 
 .email-link:hover {
@@ -327,7 +329,7 @@ html, body, #root {
 }
 
 .email-link:hover::after {
-  transform: scaleX(0.6);
+  transform: scaleX(0);     /* fully retract right → left */
 }
 
 /* ─── Social links ───────────────────────────────────────── */
@@ -499,6 +501,7 @@ html, body, #root {
 /* ─── Contact card: expanded view ───────────────────────── */
 .contact-expanded-view {
   flex-shrink: 0;
+  width: 100%;   /* fills card width (480px) when active */
   opacity: 0;
   pointer-events: none;
   /* Fades in after the card has begun expanding (0.3s delay) */

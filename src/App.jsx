@@ -215,7 +215,7 @@ export default function App() {
             <div className="contact-info">
               <div className="contact-role-row">
                 <span className="plus-sm">+</span>
-                <span className="contact-role">Creative Digital Designer</span>
+                <span className="contact-role">Creative Digital<br />Designer</span>
               </div>
               {/* emailRef: hover scramble via useScrambleOnHover */}
               <a
