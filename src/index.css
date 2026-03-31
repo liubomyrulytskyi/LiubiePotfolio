@@ -220,11 +220,27 @@ html, body, #root {
   position: absolute;
   top: 10px;
   right: 10px;
-  display: flex;
-  gap: 6px;
-  align-items: flex-start;
   background: #000;
   padding: 6px;
+  /* Expansion system — stacks collapsed + expanded views vertically,
+     clips everything below the active max-height boundary.          */
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow: hidden;
+  max-height: 102px;      /* collapsed: 90px photo + 12px padding  */
+  pointer-events: auto;   /* override scale-root pointer-events:none */
+  cursor: none;           /* custom cursor shown on hover instead   */
+  transition:
+    width      0.55s cubic-bezier(0.16, 1, 0.3, 1),
+    max-height 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Expanded state — !important overrides the inline locked-width set by JS */
+.contact-card[data-contact-status="active"] {
+  width: 480px !important;
+  max-height: 780px;
+  cursor: auto;
 }
 
 .contact-photo-wrap {
@@ -460,4 +476,210 @@ html, body, #root {
   color: white;
   mix-blend-mode: difference;
   pointer-events: none;
+}
+
+/* ─── Contact card: collapsed view ──────────────────────── */
+.contact-collapsed-view {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  flex-shrink: 0;
+  overflow: hidden;
+  max-height: 100px;
+  opacity: 1;
+  transition: max-height 0.2s ease, opacity 0.15s ease;
+}
+
+.contact-card[data-contact-status="active"] .contact-collapsed-view {
+  max-height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ─── Contact card: expanded view ───────────────────────── */
+.contact-expanded-view {
+  flex-shrink: 0;
+  opacity: 0;
+  pointer-events: none;
+  /* Fades in after the card has begun expanding (0.3s delay) */
+  transition: opacity 0.35s ease 0.3s;
+}
+
+.contact-card[data-contact-status="active"] .contact-expanded-view {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ─── Expanded view: inner structure ────────────────────── */
+.contact-exp-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.contact-exp-top {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  width: 100%;
+}
+
+/* Header: role block + email, 90px tall */
+.contact-exp-header {
+  height: 90px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 100%;
+}
+
+/* Small + icon above role title (matches Figma 6.24px asset) */
+.contact-exp-role-block {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 7px;
+  align-items: flex-start;
+}
+
+.contact-exp-plus {
+  display: block;
+  font-family: 'PP Editorial', serif;
+  font-size: 7px;
+  line-height: 1;
+  color: white;
+  opacity: 0.7;
+}
+
+.contact-exp-role-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* "Lviv, Ukraine" — PP Editorial 10px, only visible when expanded */
+.contact-location {
+  font-family: 'PP Editorial', serif;
+  font-weight: 300;
+  font-size: 10px;
+  line-height: 0.85;
+  color: white;
+  white-space: nowrap;
+}
+
+/* ─── Bio text — PP Editorial line-height fix ────────────
+   line-height: 85% applied ONLY to this PP Editorial element
+   inside the expandable container to prevent vertical clipping. */
+.contact-bio {
+  font-family: 'PP Editorial', serif;
+  font-weight: 300;
+  font-size: 16px;
+  line-height: 85%;
+  color: white;
+  width: 100%;
+}
+
+/* ─── Expanded portrait section ─────────────────────────── */
+.contact-exp-portrait {
+  height: 422px;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.contact-exp-portrait-color {
+  position: absolute;
+  bottom: -22px;
+  left: -16px;
+  width: 498px;
+  height: 664px;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.contact-exp-portrait-bw {
+  position: absolute;
+  bottom: -107px;
+  left: 0;
+  width: 464px;
+  height: 618px;
+  object-fit: cover;
+  mix-blend-mode: difference;
+  pointer-events: none;
+}
+
+/* ─── Close button ───────────────────────────────────────── */
+.contact-close-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 20px;
+  height: 20px;
+  background: red;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease 0.45s; /* appears after expansion settles */
+}
+
+.contact-card[data-contact-status="active"] .contact-close-btn {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ─── Custom expand cursor ───────────────────────────────── */
+/* Positioned in fixed/screen space (outside scale-root).
+   Matches Figma node 34:2: red 18px pill with "+ expand" label. */
+.contact-expand-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 1000;
+  background: #ff0000;
+  height: 18px;
+  padding: 0 6px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+  white-space: nowrap;
+  /* Offset so the pill sits just below-right of the hot-spot */
+  margin-top: 10px;
+  margin-left: 8px;
+  font-family: 'PP Editorial', serif;
+  font-size: 14px;
+  line-height: 1;
+  color: #000;
+  transform-origin: top left;
+}
+
+.contact-expand-cursor--visible {
+  opacity: 1;
+}
+
+/* ─── Background dim when contact is expanded ────────────── */
+/* All surrounding UI elements except role-card (middle highlight)
+   transition to opacity 0.3 matching the Figma expanded frame.   */
+.hero-name,
+.projects-list,
+.social-links,
+.go-rage,
+.disciplines-ticker,
+.plus-center-left {
+  transition: opacity 0.4s ease;
+}
+
+.contact-is-expanded .hero-name,
+.contact-is-expanded .projects-list,
+.contact-is-expanded .social-links,
+.contact-is-expanded .go-rage,
+.contact-is-expanded .disciplines-ticker,
+.contact-is-expanded .plus-center-left {
+  opacity: 0.3;
 }

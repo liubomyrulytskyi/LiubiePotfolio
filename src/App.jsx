@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import HeroBackground from './HeroBackground.jsx'
 import {
   useScrambleOnLoad,
@@ -7,9 +7,9 @@ import {
   useScrambleHoverArray,
 } from './hooks/useScramble.js'
 
-// Asset from Figma (valid ~7 days from design export)
-const PORTRAIT_URL =
-  'https://www.figma.com/api/mcp/asset/443e1956-8c50-4dba-a804-37dfe6958ae1'
+// Portrait assets — valid ~7 days from Figma export
+const PORTRAIT_URL    = 'https://www.figma.com/api/mcp/asset/443e1956-8c50-4dba-a804-37dfe6958ae1'
+const PORTRAIT_BW_URL = 'https://www.figma.com/api/mcp/asset/a5c3f19f-b57e-4fbe-963e-2ea3e080426b'
 
 const PROJECTS = [
   { name: 'Co*struc*ive Bio', year: '2022', nda: true },
@@ -43,26 +43,21 @@ export default function App() {
   }, [])
 
   // ── Scramble refs ─────────────────────────────────────────
-  const heroLine1Ref    = useRef(null)   // "LIUBIE"
-  const heroLine2Ref    = useRef(null)   // "ULYTSKYI"
+  const heroLine1Ref    = useRef(null)
+  const heroLine2Ref    = useRef(null)
   const projectNameRefs = useRef(PROJECTS.map(() => null))
   const socialRefs      = useRef([null, null, null])
   const emailRef        = useRef(null)
 
-  // ── Scramble on load — hero heading ──────────────────────
   useScrambleOnLoad(heroLine1Ref, { duration: 1.2, speed: 0.85 })
   useScrambleOnLoad(heroLine2Ref, { duration: 1.2, speed: 0.85, delay: 0.1 })
 
-  // ── Scramble on visible — project names (staggered) ──────
-  // Base delay of 0.5 s lets the hero finish first; each row
-  // adds 0.07 s to create a clean cascade.
   useScrambleArrayOnVisible(
     projectNameRefs,
     { duration: 1.4, speed: 0.9, delay: 0.5 },
     0.07
   )
 
-  // ── Scramble on hover — social links + email ─────────────
   useScrambleHoverArray(socialRefs, {
     enterDuration: 0.8,
     leaveDuration: 0.5,
@@ -76,16 +71,87 @@ export default function App() {
     leaveChars: '◊▯∆',
   })
 
+  // ── Contact card expansion ────────────────────────────────
+  // Uses data-contact-status="not-active|active" mirroring the
+  // data-navigation-status pattern from the navigation system.
+  const [contactExpanded, setContactExpanded] = useState(false)
+  const contactCardRef = useRef(null)
+
+  const openContact = () => {
+    const card = contactCardRef.current
+    if (!card) return
+    // Lock the natural collapsed width as an inline style so the CSS transition
+    // has a defined start point. The active-state rule uses !important to take
+    // precedence over this inline value when expanding.
+    card.style.width = card.offsetWidth + 'px'
+    void card.offsetWidth // force reflow before state update
+    setContactExpanded(true)
+    setCursorVisible(false)
+  }
+
+  const closeContact = () => {
+    setContactExpanded(false)
+    // Once the collapse transition finishes, remove the inline locked-width so
+    // the card returns to natural auto sizing.
+    setTimeout(() => {
+      if (contactCardRef.current) contactCardRef.current.style.width = ''
+    }, 600)
+  }
+
+  // Close on click outside — only active when expanded
+  useEffect(() => {
+    if (!contactExpanded) return
+    const handler = (e) => {
+      if (contactCardRef.current && !contactCardRef.current.contains(e.target)) {
+        closeContact()
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [contactExpanded]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Close on ESC — mirrors data-navigation-toggle="close" pattern
+  useEffect(() => {
+    if (!contactExpanded) return
+    const handler = (e) => {
+      if (e.key === 'Escape') closeContact()
+    }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [contactExpanded]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Custom expand cursor ──────────────────────────────────
+  // Rendered in fixed/screen space outside scale-root so it
+  // doesn't inherit the viewport scale transform.
+  const [cursorPos, setCursorPos]         = useState({ x: -200, y: -200 })
+  const [cursorVisible, setCursorVisible] = useState(false)
+
+  useEffect(() => {
+    const handler = (e) => setCursorPos({ x: e.clientX, y: e.clientY })
+    window.addEventListener('mousemove', handler)
+    return () => window.removeEventListener('mousemove', handler)
+  }, [])
+
   return (
     <>
-      {/* ── Scene background — lives outside scale-root so it fills the true viewport ── */}
+      {/* ── Custom expand cursor — screen space, outside scaled container ── */}
+      <div
+        className={`contact-expand-cursor${cursorVisible && !contactExpanded ? ' contact-expand-cursor--visible' : ''}`}
+        style={{ transform: `translate(${cursorPos.x}px, ${cursorPos.y}px)` }}
+        aria-hidden="true"
+      >
+        + expand
+      </div>
+
+      {/* ── Scene background ── */}
       <HeroBackground />
 
-      <div ref={containerRef} className="scale-root">
+      <div
+        ref={containerRef}
+        className={`scale-root${contactExpanded ? ' contact-is-expanded' : ''}`}
+      >
 
-        {/* ── Hero name (top-left, blurred) ─────────────────
-            Each line wrapped in a span so scramble can set
-            textContent without destroying the <br> between them. */}
+        {/* ── Hero name (top-left, blurred) ── */}
         <h1 className="hero-name">
           <span ref={heroLine1Ref}>LIUBIE</span>
           <br />
@@ -98,7 +164,6 @@ export default function App() {
             <li key={`${name}-${year}`} className="project-row">
               <div className="project-title">
                 <span className="bracket">//</span>
-                {/* ref callback populates the pre-allocated array slot */}
                 <span
                   className="project-name"
                   ref={(el) => { projectNameRefs.current[i] = el }}
@@ -128,33 +193,106 @@ export default function App() {
           <span className="plus-deco">+</span>
         </div>
 
-        {/* ── Contact card (top-right) ── */}
-        <div className="contact-card">
-          <div className="contact-photo-wrap">
-            <img
-              src={PORTRAIT_URL}
-              alt="Liubie Ulytskyi"
-              className="contact-photo"
-            />
-          </div>
-          <div className="contact-info">
-            <div className="contact-role-row">
-              <span className="plus-sm">+</span>
-              <span className="contact-role">Creative Digital Designer</span>
+        {/* ── Contact card (top-right, expandable) ──────────
+            data-contact-status mirrors the data-navigation-status
+            pattern from the navigation expansion system.
+            Clicking anywhere inside triggers expansion EXCEPT the
+            email <a> which stops propagation.                    ── */}
+        <div
+          ref={contactCardRef}
+          className="contact-card"
+          data-contact-status={contactExpanded ? 'active' : 'not-active'}
+          onClick={openContact}
+          onMouseEnter={() => { if (!contactExpanded) setCursorVisible(true) }}
+          onMouseLeave={() => setCursorVisible(false)}
+        >
+
+          {/* ── Collapsed view ── */}
+          <div className="contact-collapsed-view">
+            <div className="contact-photo-wrap">
+              <img src={PORTRAIT_URL} alt="Liubie Ulytskyi" className="contact-photo" />
             </div>
-            {/* email-link: hover scramble via emailRef */}
-            <a href="mailto:hello@liubie.com" className="email-link" ref={emailRef}>
-              Email me
-            </a>
+            <div className="contact-info">
+              <div className="contact-role-row">
+                <span className="plus-sm">+</span>
+                <span className="contact-role">Creative Digital Designer</span>
+              </div>
+              {/* emailRef: hover scramble via useScrambleOnHover */}
+              <a
+                href="mailto:hello@liubie.com"
+                className="email-link"
+                ref={emailRef}
+                onClick={e => e.stopPropagation()}
+              >
+                Email me
+              </a>
+            </div>
+          </div>
+
+          {/* ── Expanded view ── */}
+          <div
+            className="contact-expanded-view"
+            aria-hidden={contactExpanded ? 'false' : 'true'}
+          >
+            <div className="contact-exp-inner">
+
+              <div className="contact-exp-top">
+
+                {/* Header: role + location + email (90px tall, flex-col justify-between) */}
+                <div className="contact-exp-header">
+                  <div className="contact-exp-role-block">
+                    <span className="contact-exp-plus" aria-hidden="true">+</span>
+                    <div className="contact-exp-role-stack">
+                      <span className="contact-role">Creative Digital Designer</span>
+                      <span className="contact-location">Lviv, Ukraine</span>
+                    </div>
+                  </div>
+                  <a
+                    href="mailto:hello@liubie.com"
+                    className="email-link"
+                    onClick={e => e.stopPropagation()}
+                  >
+                    Email me
+                  </a>
+                </div>
+
+                {/* Bio text — PP Editorial Ultralight */}
+                <p className="contact-bio">
+                  Curious mind. Sharp thinking. A constant urge to question how things work
+                  and rebuild them better. Complex ideas turned into clear structures and
+                  bold digital interfaces that actually serve a purpose.
+                  <br /><br />
+                  A design approach driven by clarity, systems thinking, and visual impact
+                  — where aesthetics support function and every element earns its place.
+                </p>
+
+              </div>
+
+              {/* Portrait section */}
+              <div className="contact-exp-portrait">
+                <img src={PORTRAIT_URL}    alt="" className="contact-exp-portrait-color" />
+                <img src={PORTRAIT_BW_URL} alt="" className="contact-exp-portrait-bw"    />
+              </div>
+
+            </div>
+
+            {/* Close button — data-contact-toggle="close" mirrors nav pattern */}
+            <button
+              className="contact-close-btn"
+              onClick={e => { e.stopPropagation(); closeContact() }}
+              aria-label="Close contact panel"
+              data-contact-toggle="close"
+            />
+
           </div>
         </div>
 
-        {/* ── Social links (bottom-left, mix-blend-difference) ── */}
+        {/* ── Social links (bottom-left) ── */}
         <nav className="social-links" aria-label="Social links">
           {[
-            { label: 'LD', href: '#linkedin' },
+            { label: 'LD', href: '#linkedin'  },
             { label: 'IG', href: '#instagram' },
-            { label: 'DR', href: '#dribbble' },
+            { label: 'DR', href: '#dribbble'  },
           ].map(({ label, href }, i) => (
             <a
               key={label}
