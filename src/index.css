@@ -64,6 +64,36 @@ html, body, #root {
 }
 
 
+/* ─── Highlight-marker reveal system ────────────────────── */
+/* Elements start invisible until GSAP SplitText takes over  */
+[data-highlight-marker-reveal] {
+  visibility: hidden;
+}
+
+[data-highlight-marker-reveal] .highlight-marker-line {
+  width: auto;
+  display: inline-block !important;
+  margin: -0.055em 0;
+}
+
+.highlight-marker-bar {
+  position: absolute;
+  inset: -0.055em 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* ─── Page-load keyframes (for non-text UI elements) ─────── */
+@keyframes page-fade-slide-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes page-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
 /* ─── Hero name ──────────────────────────────────────────── */
 .hero-name {
   position: absolute;
@@ -78,6 +108,7 @@ html, body, #root {
   filter: blur(7px);
   pointer-events: none;
   white-space: nowrap;
+  /* No page-load animation here — child spans carry data-highlight-marker-reveal */
 }
 
 /* ─── Projects list ──────────────────────────────────────── */
@@ -239,6 +270,8 @@ html, body, #root {
   transition:
     width      0.6s cubic-bezier(0.65,  0,    0, 1),
     max-height 0.6s cubic-bezier(0.625, 0.05, 0, 1);
+  transform-origin: top right;
+  animation: page-fade-slide-in 0.6s cubic-bezier(0.625, 0.05, 0, 1) 0.05s backwards;
 }
 
 /* Expanded state — explicit widths; no inline-style locking needed */
@@ -346,6 +379,7 @@ html, body, #root {
   gap: 8px;
   align-items: center;
   mix-blend-mode: difference;
+  animation: page-fade-in 0.6s cubic-bezier(0.625, 0.05, 0, 1) 0.60s backwards;
 }
 
 .social-link {
@@ -437,6 +471,7 @@ html, body, #root {
   bottom: 10px;
   right: 10px;
   width: 192px;
+  animation: page-fade-in 0.6s cubic-bezier(0.625, 0.05, 0, 1) 0.60s backwards;
   height: 18px;
   overflow: hidden;
   mix-blend-mode: difference;
@@ -494,17 +529,21 @@ html, body, #root {
   overflow: hidden;
   max-height: 100px;
   opacity: 1;
-  transition: max-height 0.2s ease, opacity 0.15s ease;
+  /* Close (not-active): collapsed view re-appears after a short delay so the
+     card has started to shrink before the collapsed content fades back in.  */
+  transition: max-height 0.3s ease 0.15s, opacity 0.3s ease 0.15s;
 }
 
 .contact-card[data-contact-status="active"] .contact-collapsed-view {
   max-height: 0;
   opacity: 0;
   pointer-events: none;
+  /* Open: hide the collapsed view quickly, no delay */
+  transition: max-height 0.2s ease, opacity 0.15s ease;
 }
 
 /* ─── Contact card: expanded view ───────────────────────── */
-/* Container — no opacity here; each inner item fades with nav stagger timing */
+/* Container — pointer-event gating only; visibility handled by GSAP */
 .contact-expanded-view {
   flex-shrink: 0;
   width: 100%;
@@ -515,19 +554,21 @@ html, body, #root {
   pointer-events: auto;
 }
 
-/* Inner items fade in with nav expandable-content easing.
-   transitionDelay is set per-item by JS (index * 0.05s, base 0.3s). */
-.contact-exp-header,
-.contact-bio,
+/* contact-exp-header and contact-bio carry data-highlight-marker-reveal
+   + data-marker-manual — GSAP controls their autoAlpha on card open/close.
+   No CSS opacity transition needed for those elements. */
+
+/* Portrait section — no text to reveal, CSS opacity transition handles it.
+   Transition on default state = CLOSE animation (fast).
+   Transition on active state  = OPEN animation (delayed, matches card settle). */
 .contact-exp-portrait {
   opacity: 0;
-  transition: opacity 0.6s cubic-bezier(0.625, 0.05, 0, 1);
+  transition: opacity 0.2s ease;                                       /* close: fast */
 }
 
-.contact-card[data-contact-status="active"] .contact-exp-header,
-.contact-card[data-contact-status="active"] .contact-bio,
 .contact-card[data-contact-status="active"] .contact-exp-portrait {
   opacity: 1;
+  transition: opacity 0.5s cubic-bezier(0.625, 0.05, 0, 1) 0.40s;    /* open: delayed */
 }
 
 /* ─── Expanded view: inner structure ────────────────────── */

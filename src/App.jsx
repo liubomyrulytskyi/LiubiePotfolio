@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import HeroBackground from './HeroBackground.jsx'
 import {
-  useScrambleOnLoad,
-  useScrambleArrayOnVisible,
   useScrambleOnHover,
   useScrambleHoverArray,
 } from './hooks/useScramble.js'
+import {
+  initHighlightMarkerTextReveal,
+  playManualElements,
+  resetManualElements,
+} from './lib/highlightMarkerReveal.js'
 
 // Portrait assets — valid ~7 days from Figma export
 const PORTRAIT_URL    = 'https://www.figma.com/api/mcp/asset/443e1956-8c50-4dba-a804-37dfe6958ae1'
@@ -42,21 +45,19 @@ export default function App() {
     return () => window.removeEventListener('resize', scale)
   }, [])
 
-  // ── Scramble refs ─────────────────────────────────────────
-  const heroLine1Ref    = useRef(null)
-  const heroLine2Ref    = useRef(null)
-  const projectNameRefs = useRef(PROJECTS.map(() => null))
-  const socialRefs      = useRef([null, null, null])
-  const emailRef        = useRef(null)
+  // ── Highlight-marker text reveal (replaces page-load scramble) ─────────────
+  // Initialised once after fonts are ready so SplitText measures correctly.
+  useEffect(() => {
+    let cleanup
+    document.fonts.ready.then(() => {
+      cleanup = initHighlightMarkerTextReveal()
+    })
+    return () => cleanup?.()
+  }, [])
 
-  useScrambleOnLoad(heroLine1Ref, { duration: 1.2, speed: 0.85 })
-  useScrambleOnLoad(heroLine2Ref, { duration: 1.2, speed: 0.85, delay: 0.1 })
-
-  useScrambleArrayOnVisible(
-    projectNameRefs,
-    { duration: 1.4, speed: 0.9, delay: 0.5 },
-    0.07
-  )
+  // ── Hover scramble (kept — different interaction from load reveal) ──────────
+  const socialRefs = useRef([null, null, null])
+  const emailRef   = useRef(null)
 
   useScrambleHoverArray(socialRefs, {
     enterDuration: 0.8,
@@ -72,13 +73,9 @@ export default function App() {
   })
 
   // ── Contact card expansion ────────────────────────────────
-  // Uses data-contact-status="not-active|active" mirroring the
-  // data-navigation-status pattern from the navigation system.
   const [contactExpanded, setContactExpanded] = useState(false)
   const contactCardRef = useRef(null)
 
-  // Both states have explicit CSS widths (221px ↔ 480px) so no inline-style
-  // locking is needed — the CSS transition animates directly between them.
   const openContact = () => {
     if (!contactCardRef.current) return
     setContactExpanded(true)
@@ -88,6 +85,17 @@ export default function App() {
   const closeContact = () => {
     setContactExpanded(false)
   }
+
+  // Play / reset manual highlight-marker items when card expands or collapses
+  useEffect(() => {
+    const card = contactCardRef.current
+    if (!card) return
+    if (contactExpanded) {
+      playManualElements(card)
+    } else {
+      resetManualElements(card)
+    }
+  }, [contactExpanded])
 
   // Close on click outside — only active when expanded
   useEffect(() => {
@@ -101,7 +109,7 @@ export default function App() {
     return () => document.removeEventListener('mousedown', handler)
   }, [contactExpanded]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Close on ESC — mirrors data-navigation-toggle="close" pattern
+  // Close on ESC
   useEffect(() => {
     if (!contactExpanded) return
     const handler = (e) => {
@@ -111,20 +119,7 @@ export default function App() {
     return () => document.removeEventListener('keydown', handler)
   }, [contactExpanded]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Nav-system stagger on expanded inner items ────────────
-  // Mirrors: navigationInnerItems.forEach((item, i) => item.style.transitionDelay = `${i * 0.05}s`)
-  // Base offset of 0.3s lets the card expand before content fades in.
-  useEffect(() => {
-    const card = contactCardRef.current
-    if (!card) return
-    card.querySelectorAll('[data-contact-item]').forEach((el, i) => {
-      el.style.transitionDelay = `${0.3 + i * 0.05}s`
-    })
-  }, []) // set once on mount — delays are static
-
   // ── Custom expand cursor ──────────────────────────────────
-  // Rendered in fixed/screen space outside scale-root so it
-  // doesn't inherit the viewport scale transform.
   const [cursorPos, setCursorPos]         = useState({ x: -200, y: -200 })
   const [cursorVisible, setCursorVisible] = useState(false)
 
@@ -154,10 +149,17 @@ export default function App() {
       >
 
         {/* ── Hero name (top-left, blurred) ── */}
+        {/* Each span gets its own bar sweep with a slight stagger */}
         <h1 className="hero-name">
-          <span ref={heroLine1Ref}>LIUBIE</span>
+          <span
+            data-highlight-marker-reveal
+            data-marker-delay="0.1"
+          >LIUBIE</span>
           <br />
-          <span ref={heroLine2Ref}>ULYTSKYI</span>
+          <span
+            data-highlight-marker-reveal
+            data-marker-delay="0.22"
+          >ULYTSKYI</span>
         </h1>
 
         {/* ── Projects list (centered) ── */}
@@ -166,9 +168,11 @@ export default function App() {
             <li key={`${name}-${year}`} className="project-row">
               <div className="project-title">
                 <span className="bracket">//</span>
+                {/* Staggered reveal: base 0.35s + 0.07s per item */}
                 <span
                   className="project-name"
-                  ref={(el) => { projectNameRefs.current[i] = el }}
+                  data-highlight-marker-reveal
+                  data-marker-delay={0.35 + i * 0.07}
                 >
                   {name}{nda ? '\u00a0(NDA)' : ''}
                 </span>
@@ -178,7 +182,8 @@ export default function App() {
                 <span className="bracket-r">\</span>
               </div>
             </li>
-          ))}
+          ))
+          }
         </ul>
 
         {/* ── Role card (overlay on list center) ── */}
@@ -187,19 +192,23 @@ export default function App() {
           <div className="role-inner">
             <div className="role-title-row">
               <span className="bracket">//</span>
-              <span className="role-title">Creative Digital Designer</span>
+              <span
+                className="role-title"
+                data-highlight-marker-reveal
+                data-marker-delay="0.38"
+              >Creative Digital Designer</span>
               <span className="bracket-r">\</span>
             </div>
-            <p className="award-text">Awwwards Young Jury 25&apos;26</p>
+            <p
+              className="award-text"
+              data-highlight-marker-reveal
+              data-marker-delay="0.45"
+            >Awwwards Young Jury 25&apos;26</p>
           </div>
           <span className="plus-deco">+</span>
         </div>
 
-        {/* ── Contact card (top-right, expandable) ──────────
-            data-contact-status mirrors the data-navigation-status
-            pattern from the navigation expansion system.
-            Clicking anywhere inside triggers expansion EXCEPT the
-            email <a> which stops propagation.                    ── */}
+        {/* ── Contact card (top-right, expandable) ── */}
         <div
           ref={contactCardRef}
           className="contact-card"
@@ -219,7 +228,7 @@ export default function App() {
                 <span className="plus-sm">+</span>
                 <span className="contact-role">Creative Digital<br />Designer</span>
               </div>
-              {/* emailRef: hover scramble via useScrambleOnHover */}
+              {/* emailRef: hover scramble preserved */}
               <a
                 href="mailto:hello@liubie.com"
                 className="email-link"
@@ -240,8 +249,14 @@ export default function App() {
 
               <div className="contact-exp-top">
 
-                {/* Header: role + location + email (90px tall, flex-col justify-between) */}
-                <div className="contact-exp-header" data-contact-item>
+                {/* Header: role block + email — manual highlight-marker reveal */}
+                <div
+                  className="contact-exp-header"
+                  data-highlight-marker-reveal
+                  data-marker-manual
+                  data-marker-theme="card"
+                  data-marker-delay="0.3"
+                >
                   <div className="contact-exp-role-block">
                     <span className="contact-exp-plus" aria-hidden="true">+</span>
                     <div className="contact-exp-role-stack">
@@ -258,8 +273,14 @@ export default function App() {
                   </a>
                 </div>
 
-                {/* Bio text — PP Editorial Ultralight */}
-                <p className="contact-bio" data-contact-item>
+                {/* Bio text — manual highlight-marker reveal */}
+                <p
+                  className="contact-bio"
+                  data-highlight-marker-reveal
+                  data-marker-manual
+                  data-marker-theme="card"
+                  data-marker-delay="0.5"
+                >
                   Curious mind. Sharp thinking. A constant urge to question how things work
                   and rebuild them better. Complex ideas turned into clear structures and
                   bold digital interfaces that actually serve a purpose.
@@ -270,15 +291,15 @@ export default function App() {
 
               </div>
 
-              {/* Portrait section */}
-              <div className="contact-exp-portrait" data-contact-item>
+              {/* Portrait section — CSS-controlled visibility (no text to split) */}
+              <div className="contact-exp-portrait">
                 <img src={PORTRAIT_URL}    alt="" className="contact-exp-portrait-color" />
                 <img src={PORTRAIT_BW_URL} alt="" className="contact-exp-portrait-bw"    />
               </div>
 
             </div>
 
-            {/* Close button — data-contact-toggle="close" mirrors nav pattern */}
+            {/* Close button */}
             <button
               className="contact-close-btn"
               onClick={e => { e.stopPropagation(); closeContact() }}
@@ -312,7 +333,11 @@ export default function App() {
           <div className="go-rage-dot-wrap">
             <div className="go-rage-dot" />
           </div>
-          <span className="go-rage-text">go rage</span>
+          <span
+            className="go-rage-text"
+            data-highlight-marker-reveal
+            data-marker-delay="0.65"
+          >go rage</span>
         </div>
 
         {/* ── Disciplines horizontal ticker (bottom-right) ── */}
