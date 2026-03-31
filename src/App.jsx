@@ -5,10 +5,10 @@ import {
   useScrambleHoverArray,
 } from './hooks/useScramble.js'
 import {
-  initHighlightMarkerTextReveal,
+  initSplitTextReveal,
   playManualElements,
   resetManualElements,
-} from './lib/highlightMarkerReveal.js'
+} from './lib/splitTextReveal.js'
 
 // Portrait assets — valid ~7 days from Figma export
 const PORTRAIT_URL    = 'https://www.figma.com/api/mcp/asset/443e1956-8c50-4dba-a804-37dfe6958ae1'
@@ -45,17 +45,17 @@ export default function App() {
     return () => window.removeEventListener('resize', scale)
   }, [])
 
-  // ── Highlight-marker text reveal (replaces page-load scramble) ─────────────
-  // Initialised once after fonts are ready so SplitText measures correctly.
+  // ── SplitText line-mask reveal ────────────────────────────────────────────
+  // Waits for fonts so SplitText measures line breaks correctly (no bad splits).
   useEffect(() => {
     let cleanup
     document.fonts.ready.then(() => {
-      cleanup = initHighlightMarkerTextReveal()
+      cleanup = initSplitTextReveal()
     })
     return () => cleanup?.()
   }, [])
 
-  // ── Hover scramble (kept — different interaction from load reveal) ──────────
+  // ── Hover scramble (separate system — kept, no conflict with SplitText) ────
   const socialRefs = useRef([null, null, null])
   const emailRef   = useRef(null)
 
@@ -72,7 +72,7 @@ export default function App() {
     leaveChars: '◊▯∆',
   })
 
-  // ── Contact card expansion ────────────────────────────────
+  // ── Contact card expansion ────────────────────────────────────────────────
   const [contactExpanded, setContactExpanded] = useState(false)
   const contactCardRef = useRef(null)
 
@@ -86,7 +86,7 @@ export default function App() {
     setContactExpanded(false)
   }
 
-  // Play / reset manual highlight-marker items when card expands or collapses
+  // Play / reset manual SplitText items when card expands or collapses
   useEffect(() => {
     const card = contactCardRef.current
     if (!card) return
@@ -119,7 +119,7 @@ export default function App() {
     return () => document.removeEventListener('keydown', handler)
   }, [contactExpanded]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Custom expand cursor ──────────────────────────────────
+  // ── Custom expand cursor ──────────────────────────────────────────────────
   const [cursorPos, setCursorPos]         = useState({ x: -200, y: -200 })
   const [cursorVisible, setCursorVisible] = useState(false)
 
@@ -148,32 +148,31 @@ export default function App() {
         className={`scale-root${contactExpanded ? ' contact-is-expanded' : ''}`}
       >
 
-        {/* ── Hero name (top-left, blurred) ── */}
-        {/* Each span gets its own bar sweep with a slight stagger */}
+        {/* ── Hero name (top-left, blurred) ──────────────────────────────────
+            Each span is one SplitText element → one masked line that slides up.
+            The h1's filter:blur(7px) is inherited by both the mask and the line,
+            keeping the blurred aesthetic while the line reveals from below.   ── */}
         <h1 className="hero-name">
-          <span
-            data-highlight-marker-reveal
-            data-marker-delay="0.1"
-          >LIUBIE</span>
+          <span data-split="heading" data-split-delay="0.10">LIUBIE</span>
           <br />
-          <span
-            data-highlight-marker-reveal
-            data-marker-delay="0.22"
-          >ULYTSKYI</span>
+          <span data-split="heading" data-split-delay="0.22">ULYTSKYI</span>
         </h1>
 
-        {/* ── Projects list (centered) ── */}
+        {/* ── Projects list (centered) ─────────────────────────────────────────
+            Each row is a flex container (justify-content: space-between) so
+            SplitText is NOT applied here — it would destroy the flex layout.
+            Instead, each <li> uses a CSS row-fade-up animation with a staggered
+            inline animationDelay to achieve the same visual sequence.          ── */}
         <ul className="projects-list" aria-label="Selected works">
           {PROJECTS.map(({ name, year, nda }, i) => (
-            <li key={`${name}-${year}`} className="project-row">
+            <li
+              key={`${name}-${year}`}
+              className="project-row"
+              style={{ animationDelay: `${0.35 + i * 0.07}s` }}
+            >
               <div className="project-title">
                 <span className="bracket">//</span>
-                {/* Staggered reveal: base 0.35s + 0.07s per item */}
-                <span
-                  className="project-name"
-                  data-highlight-marker-reveal
-                  data-marker-delay={0.35 + i * 0.07}
-                >
+                <span className="project-name">
                   {name}{nda ? '\u00a0(NDA)' : ''}
                 </span>
               </div>
@@ -182,28 +181,26 @@ export default function App() {
                 <span className="bracket-r">\</span>
               </div>
             </li>
-          ))
-          }
+          ))}
         </ul>
 
-        {/* ── Role card (overlay on list center) ── */}
-        <div className="role-card" aria-hidden="true">
+        {/* ── Role card (overlay on list center) ─────────────────────────────
+            data-split on the whole card so the plus decorations, title row,
+            and award text all reveal as staggered lines from a single split.  ── */}
+        <div
+          className="role-card"
+          aria-hidden="true"
+          data-split="heading"
+          data-split-delay="0.38"
+        >
           <span className="plus-deco">+</span>
           <div className="role-inner">
             <div className="role-title-row">
               <span className="bracket">//</span>
-              <span
-                className="role-title"
-                data-highlight-marker-reveal
-                data-marker-delay="0.38"
-              >Creative Digital Designer</span>
+              <span className="role-title">Creative Digital Designer</span>
               <span className="bracket-r">\</span>
             </div>
-            <p
-              className="award-text"
-              data-highlight-marker-reveal
-              data-marker-delay="0.45"
-            >Awwwards Young Jury 25&apos;26</p>
+            <p className="award-text">Awwwards Young Jury 25&apos;26</p>
           </div>
           <span className="plus-deco">+</span>
         </div>
@@ -228,7 +225,7 @@ export default function App() {
                 <span className="plus-sm">+</span>
                 <span className="contact-role">Creative Digital<br />Designer</span>
               </div>
-              {/* emailRef: hover scramble preserved */}
+              {/* emailRef: hover scramble — no SplitText to avoid conflict */}
               <a
                 href="mailto:hello@liubie.com"
                 className="email-link"
@@ -249,13 +246,12 @@ export default function App() {
 
               <div className="contact-exp-top">
 
-                {/* Header: role block + email — manual highlight-marker reveal */}
+                {/* Header — manual SplitText; plays when card opens (0.3s after) */}
                 <div
                   className="contact-exp-header"
-                  data-highlight-marker-reveal
-                  data-marker-manual
-                  data-marker-theme="card"
-                  data-marker-delay="0.3"
+                  data-split="heading"
+                  data-split-manual
+                  data-split-delay="0.3"
                 >
                   <div className="contact-exp-role-block">
                     <span className="contact-exp-plus" aria-hidden="true">+</span>
@@ -273,13 +269,12 @@ export default function App() {
                   </a>
                 </div>
 
-                {/* Bio text — manual highlight-marker reveal */}
+                {/* Bio — manual SplitText; plays when card opens (0.5s after) */}
                 <p
                   className="contact-bio"
-                  data-highlight-marker-reveal
-                  data-marker-manual
-                  data-marker-theme="card"
-                  data-marker-delay="0.5"
+                  data-split="heading"
+                  data-split-manual
+                  data-split-delay="0.5"
                 >
                   Curious mind. Sharp thinking. A constant urge to question how things work
                   and rebuild them better. Complex ideas turned into clear structures and
@@ -291,7 +286,7 @@ export default function App() {
 
               </div>
 
-              {/* Portrait section — CSS-controlled visibility (no text to split) */}
+              {/* Portrait — no text, CSS opacity transition handles show/hide */}
               <div className="contact-exp-portrait">
                 <img src={PORTRAIT_URL}    alt="" className="contact-exp-portrait-color" />
                 <img src={PORTRAIT_BW_URL} alt="" className="contact-exp-portrait-bw"    />
@@ -310,7 +305,10 @@ export default function App() {
           </div>
         </div>
 
-        {/* ── Social links (bottom-left) ── */}
+        {/* ── Social links (bottom-left) ─────────────────────────────────────
+            SplitText is NOT applied here because useScrambleHoverArray modifies
+            el.textContent on hover, which would destroy SplitText's line wrappers.
+            The .social-links container uses a simple CSS page-fade-in instead.  ── */}
         <nav className="social-links" aria-label="Social links">
           {[
             { label: 'LD', href: '#linkedin'  },
@@ -333,10 +331,11 @@ export default function App() {
           <div className="go-rage-dot-wrap">
             <div className="go-rage-dot" />
           </div>
+          {/* SplitText: single-line text, slides up from below its mask */}
           <span
             className="go-rage-text"
-            data-highlight-marker-reveal
-            data-marker-delay="0.65"
+            data-split="heading"
+            data-split-delay="0.65"
           >go rage</span>
         </div>
 
@@ -349,7 +348,12 @@ export default function App() {
         </div>
 
         {/* ── Center-left plus decoration ── */}
-        <span className="plus-center-left" aria-hidden="true">+</span>
+        <span
+          className="plus-center-left"
+          aria-hidden="true"
+          data-split="heading"
+          data-split-delay="0.38"
+        >+</span>
 
       </div>
     </>
