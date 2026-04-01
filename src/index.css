@@ -57,6 +57,13 @@ html, body, #root {
   pointer-events: none;      /* pass mouse events through to the canvas below */
 }
 
+.viewport-ui {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
 /* Re-enable pointer events only on interactive elements */
 .scale-root a,
 .scale-root button {
@@ -109,74 +116,92 @@ html, body, #root {
   /* No page-load animation on the h1 — child spans carry data-split="heading" */
 }
 
-/* ─── Projects list ──────────────────────────────────────── */
-.projects-list {
+/* ─── Mid-screen editorial copy ─────────────────────────── */
+.projects-stage {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   width: 880px;
+  height: 230px;
+  pointer-events: none;
+}
+
+.projects-list {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 230px;
   display: flex;
   flex-direction: column;
   gap: 6px;
   font-family: 'PP Editorial', serif;
   font-weight: 300;
   font-size: 16px;
-  line-height: 0.85;
+  line-height: 85%;
   color: white;
   letter-spacing: 0;
+}
+
+.projects-list--names {
+  left: 0;
+  align-items: flex-start;
+}
+
+.projects-list--years {
+  right: 0;
+  align-items: flex-end;
 }
 
 .project-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   width: 100%;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  overflow: visible;
   /* row-fade-up animation — delay set per-row via inline style in JSX */
   animation: row-fade-up 0.6s cubic-bezier(0.625, 0.05, 0, 1) backwards;
 }
 
-.project-title {
-  display: flex;
+.project-row--name {
+  justify-content: flex-start;
   gap: 6px;
-  align-items: center;
-  min-width: 0;
 }
 
-.project-title .bracket {
-  flex-shrink: 0;
+.project-row--year {
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.project-inline-bracket {
   font-family: 'PP Editorial', serif;
   font-weight: 300;
+  line-height: 85%;
   opacity: 0.6;
-}
-
-.project-title .project-name {
-  width: 220px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.project-year-group {
-  display: flex;
-  gap: 6px;
-  align-items: center;
   flex-shrink: 0;
 }
 
-.project-year-group .year {
+.project-inline-bracket--right {
+  text-align: right;
+}
+
+.project-name {
+  width: 220px;
+  line-height: 85%;
+  white-space: nowrap;
+  overflow: visible;
+  text-align: left;
+}
+
+.year {
   font-family: 'PP Mori', sans-serif;
   font-weight: 600;
   letter-spacing: -0.08em;
   font-size: 16px;
   line-height: 0.75;
   min-width: 43px;
-}
-
-.project-year-group .bracket-r {
-  font-family: 'PP Editorial', serif;
-  font-weight: 300;
-  opacity: 0.6;
+  text-align: right;
 }
 
 /* ─── Role card ──────────────────────────────────────────── */
@@ -185,7 +210,7 @@ html, body, #root {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 181px;
+  width: max-content;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -211,7 +236,7 @@ html, body, #root {
   flex-direction: column;
   gap: 2px;
   align-items: center;
-  width: 100%;
+  width: max-content;
   text-align: center;
 }
 
@@ -220,13 +245,14 @@ html, body, #root {
   gap: 6px;
   align-items: center;
   justify-content: center;
-  width: 100%;
+  width: max-content;
   white-space: nowrap;
 }
 
 .role-title-row .bracket,
 .role-title-row .bracket-r {
   opacity: 0.6;
+  line-height: 1;
 }
 
 .role-title-row .role-title {
@@ -244,6 +270,7 @@ html, body, #root {
   line-height: 0.85;
   opacity: 0.8;
   white-space: nowrap;
+  text-align: center;
 }
 
 /* ─── Contact card ───────────────────────────────────────── */
@@ -391,6 +418,7 @@ html, body, #root {
   color: white;
   text-decoration: none;
   position: relative;
+  pointer-events: auto;
   transition: opacity 0.25s ease, letter-spacing 0.25s ease;
 }
 
@@ -654,6 +682,16 @@ html, body, #root {
   flex-shrink: 0;
 }
 
+.contact-exp-portrait-main {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  pointer-events: none;
+}
+
 .contact-exp-portrait-color {
   position: absolute;
   bottom: -22px;
@@ -734,6 +772,7 @@ html, body, #root {
    transition to opacity 0.3 matching the Figma expanded frame.   */
 /* Nav system dark-background fade timing */
 .hero-name,
+.projects-stage,
 .projects-list,
 .social-links,
 .go-rage,
@@ -743,10 +782,14 @@ html, body, #root {
 }
 
 .contact-is-expanded .hero-name,
+.contact-is-expanded .projects-stage,
 .contact-is-expanded .projects-list,
-.contact-is-expanded .social-links,
 .contact-is-expanded .go-rage,
-.contact-is-expanded .disciplines-ticker,
 .contact-is-expanded .plus-center-left {
+  opacity: 0.3;
+}
+
+.viewport-ui.contact-is-expanded .social-links,
+.viewport-ui.contact-is-expanded .disciplines-ticker {
   opacity: 0.3;
 }
