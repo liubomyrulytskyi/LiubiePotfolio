@@ -1,10 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import HeroBackground from './HeroBackground.jsx'
 import {
-  useScrambleOnHover,
-  useScrambleHoverArray,
-} from './hooks/useScramble.js'
-import {
   initSplitTextReveal,
   playManualElements,
   resetManualElements,
@@ -17,13 +13,13 @@ const PORTRAIT_URL    = 'https://www.figma.com/api/mcp/asset/443e1956-8c50-4dba-
 const PORTRAIT_BW_URL = 'https://www.figma.com/api/mcp/asset/a5c3f19f-b57e-4fbe-963e-2ea3e080426b'
 
 const PROJECTS = [
-  { name: 'Constructive Bio', year: '2022', nda: true },
-  { name: 'Sound OF',         year: '2022', nda: true },
+  { name: 'Co*struc*ive Bio', year: '2022', nda: true },
+  { name: 'So*nd OF*',        year: '2022', nda: true },
   { name: 'One Day, You',     year: '2023', nda: false },
-  { name: 'Octelle',          year: '2024', nda: true },
+  { name: 'Oct**le',          year: '2024', nda: true },
   { name: 'Elecctro',         year: '2025', nda: false },
-  { name: "D'oism Systems",   year: '2025', nda: true },
-  { name: 'PtP',              year: '2026', nda: true },
+  { name: 'D*oism Sys*ems',   year: '2025', nda: true },
+  { name: 'P*P',              year: '2026', nda: true },
 ]
 
 // Horizontal ticker — two identical copies so translateX(-50%) loops seamlessly.
@@ -41,7 +37,6 @@ export default function App() {
       el.style.transform = `scale(${s})`
       el.style.left = `${(window.innerWidth  - 1440 * s) / 2}px`
       el.style.top  = `${(window.innerHeight - 900  * s) / 2}px`
-      el.style.setProperty('--scene-scale', `${s}`)
     }
     scale()
     window.addEventListener('resize', scale)
@@ -57,23 +52,6 @@ export default function App() {
     })
     return () => cleanup?.()
   }, [])
-
-  // ── Hover scramble (separate system — kept, no conflict with SplitText) ────
-  const socialRefs = useRef([null, null, null])
-  const emailRef   = useRef(null)
-
-  useScrambleHoverArray(socialRefs, {
-    enterDuration: 0.8,
-    leaveDuration: 0.5,
-    enterChars: '◊▯∆|',
-    leaveChars: '◊▯∆',
-  })
-  useScrambleOnHover(emailRef, {
-    enterDuration: 0.7,
-    leaveDuration: 0.4,
-    enterChars: '◊▯∆|',
-    leaveChars: '◊▯∆',
-  })
 
   // ── Contact card expansion ────────────────────────────────────────────────
   const [contactExpanded, setContactExpanded] = useState(false)
@@ -148,23 +126,12 @@ export default function App() {
         + expand
       </div>
 
-      {/* ── Scene background ── */}
-      <HeroBackground />
+      {/* ── Scene background temporarily disabled for performance check ── */}
 
       <div
         ref={containerRef}
         className={`scale-root${contactExpanded ? ' contact-is-expanded' : ''}`}
       >
-
-        {/* ── Hero name (top-left, blurred) ──────────────────────────────────
-            Each span is one SplitText element → one masked line that slides up.
-            The h1's filter:blur(7px) is inherited by both the mask and the line,
-            keeping the blurred aesthetic while the line reveals from below.   ── */}
-        <h1 className="hero-name">
-          <span data-split="heading" data-split-delay="0.10">LIUBIE</span>
-          <br />
-          <span data-split="heading" data-split-delay="0.22">ULYTSKYI</span>
-        </h1>
 
         {/* ── Mid-screen editorial copy ─────────────────────────────────────── */}
         <section className="projects-stage" aria-label="Selected works and recognition">
@@ -173,11 +140,22 @@ export default function App() {
               <li
                 key={`${name}-${year}-name`}
                 className="project-row project-row--name"
-                style={{ animationDelay: `${0.35 + i * 0.07}s` }}
               >
-                <span className="project-inline-bracket">//</span>
-                <span className="project-name">
-                  {name}{nda ? ' (NDA)' : ''}
+                <span className="project-item-mask">
+                  <span
+                    className="project-inline-bracket project-item-reveal"
+                    style={{ animationDelay: `${0.35 + i * 0.07}s` }}
+                  >
+                    //
+                  </span>
+                </span>
+                <span className="project-item-mask">
+                  <span
+                    className="project-name project-item-reveal"
+                    style={{ animationDelay: `${0.35 + i * 0.07}s` }}
+                  >
+                    {name}{nda ? ' (NDA)' : ''}
+                  </span>
                 </span>
               </li>
             ))}
@@ -187,16 +165,20 @@ export default function App() {
             className="role-card"
             aria-hidden="true"
           >
-            <span className="plus-deco">+</span>
+            <span className="plus-deco plus-deco--animated plus-deco--top">+</span>
             <div className="role-inner">
               <div className="role-title-row">
-                <span className="bracket">//</span>
-                <span className="role-title">Creative Digital Designer</span>
-                <span className="bracket-r">\\</span>
+                <span className="bracket bracket--animated bracket--left">//</span>
+                <span className="role-title role-title--animated">
+                  <span className="role-title-reveal">Creative Digital Designer</span>
+                </span>
+                <span className="bracket-r bracket--animated bracket--right">\\</span>
               </div>
-              <p className="award-text">Awwwards Young Jury 25&apos;26</p>
+              <p className="award-text award-text--animated">
+                <span className="award-text-reveal">Awwwards Young Jury 25&apos;26</span>
+              </p>
             </div>
-            <span className="plus-deco">+</span>
+            <span className="plus-deco plus-deco--animated plus-deco--bottom">+</span>
           </div>
 
           <ul className="projects-list projects-list--years" aria-hidden="true">
@@ -204,10 +186,23 @@ export default function App() {
               <li
                 key={`${name}-${year}-year`}
                 className="project-row project-row--year"
-                style={{ animationDelay: `${0.35 + i * 0.07}s` }}
               >
-                <span className="year">{year}</span>
-                <span className="project-inline-bracket project-inline-bracket--right">\\</span>
+                <span className="project-item-mask">
+                  <span
+                    className="year project-item-reveal"
+                    style={{ animationDelay: `${0.35 + i * 0.07}s` }}
+                  >
+                    {year}
+                  </span>
+                </span>
+                <span className="project-item-mask">
+                  <span
+                    className="project-inline-bracket project-inline-bracket--right project-item-reveal"
+                    style={{ animationDelay: `${0.35 + i * 0.07}s` }}
+                  >
+                    \\
+                  </span>
+                </span>
               </li>
             ))}
           </ul>
@@ -236,6 +231,15 @@ export default function App() {
       </div>
 
       <div className={`viewport-ui${contactExpanded ? ' contact-is-expanded' : ''}`}>
+        <div className="hero-logo" aria-label="LIUBIE ULYTSKYI">
+          <span className="hero-logo__line hero-logo__line--first">
+            <span className="hero-logo__reveal">LIUBIE</span>
+          </span>
+          <span className="hero-logo__line hero-logo__line--second">
+            <span className="hero-logo__reveal">ULYTSKYI</span>
+          </span>
+        </div>
+
         {/* ── Contact card (top-right, expandable) ── */}
         <div
           ref={contactCardRef}
@@ -258,16 +262,19 @@ export default function App() {
             </div>
             <div className="contact-info">
               <div className="contact-role-row">
-                <span className="plus-sm">+</span>
-                <span className="contact-role">Creative Digital<br />Designer</span>
+                <span className="plus-sm plus-sm--animated">+</span>
+                <span className="contact-role contact-role--animated">
+                  <span className="contact-role__reveal">Creative Digital</span>
+                  <span className="contact-role__reveal">Designer</span>
+                </span>
               </div>
               <a
                 href="mailto:hello@liubie.com"
-                className="email-link"
-                ref={emailRef}
+                className="email-link email-link--load-animated"
                 onClick={e => e.stopPropagation()}
+                aria-label="Email me"
               >
-                Email me
+                <span className="swap-text" data-label="Email me" aria-hidden="true" />
               </a>
             </div>
           </div>
@@ -295,8 +302,9 @@ export default function App() {
                     href="mailto:hello@liubie.com"
                     className="email-link"
                     onClick={e => e.stopPropagation()}
+                    aria-label="Email me"
                   >
-                    Email me
+                    <span className="swap-text" data-label="Email me" aria-hidden="true" />
                   </a>
                 </div>
 
@@ -351,9 +359,9 @@ export default function App() {
               key={label}
               href={href}
               className="social-link"
-              ref={(el) => { socialRefs.current[i] = el }}
+              aria-label={label}
             >
-              {label}
+              <span className="swap-text" data-label={label} aria-hidden="true" />
             </a>
           ))}
         </nav>
