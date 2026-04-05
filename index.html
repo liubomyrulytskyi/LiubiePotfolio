@@ -11,8 +11,30 @@
       rel="stylesheet"
     />
   </head>
-  <body>
-    <div id="root"></div>
+  <body data-barba="wrapper">
+    <!-- Transition Overlay -->
+    <div data-transition-wrap class="transition">
+      <div class="transition__panels">
+        <div data-transition-column class="transition__panel"></div>
+        <div data-transition-column class="transition__panel"></div>
+        <div data-transition-column class="transition__panel"></div>
+        <div data-transition-column class="transition__panel"></div>
+        <div data-transition-column class="transition__panel"></div>
+      </div>
+      <div class="transition__lines">
+        <div class="transition__line"></div>
+        <div class="transition__line"></div>
+        <div class="transition__line"></div>
+        <div class="transition__line"></div>
+        <div class="transition__line is--last"></div>
+      </div>
+    </div>
+
+    <!-- Main Content Container -->
+    <main data-barba="container">
+      <div id="root"></div>
+    </main>
+
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
