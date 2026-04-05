@@ -1,16 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import HeroBackground from './HeroBackground.jsx'
+import UnicornScene from 'unicornstudio-react'
 import {
   initSplitTextReveal,
   playManualElements,
   resetManualElements,
 } from './lib/splitTextReveal.js'
 
-const CUSTOM_PANEL_IMAGE_URL = '/image.png'
-
 // Portrait assets — valid ~7 days from Figma export
 const PORTRAIT_URL    = 'https://www.figma.com/api/mcp/asset/443e1956-8c50-4dba-a804-37dfe6958ae1'
-const PORTRAIT_BW_URL = 'https://www.figma.com/api/mcp/asset/a5c3f19f-b57e-4fbe-963e-2ea3e080426b'
 
 const PROJECTS = [
   { name: 'Co*struc*ive Bio', year: '2022', nda: true },
@@ -24,10 +22,26 @@ const PROJECTS = [
 
 // Horizontal ticker — two identical copies so translateX(-50%) loops seamlessly.
 const TICKER_TEXT = 'UI/UX\u00a0*\u00a0Art-Direction\u00a0*\u00a0Motion\u00a0*\u00a0'
+const PLUS_ICON_URL = '/fonts/Plus Icon.svg'
+
+function PlusIcon({ className = '' }) {
+  const classes = className ? `plus-icon ${className}` : 'plus-icon'
+
+  return (
+    <img
+      src={PLUS_ICON_URL}
+      alt=""
+      aria-hidden="true"
+      className={classes}
+      draggable="false"
+    />
+  )
+}
 
 export default function App() {
   // ── Layout scale ─────────────────────────────────────────
   const containerRef = useRef(null)
+  const unicornSceneRef = useRef(null)
 
   useEffect(() => {
     const scale = () => {
@@ -55,7 +69,7 @@ export default function App() {
 
   // ── Contact card expansion ────────────────────────────────────────────────
   const [contactExpanded, setContactExpanded] = useState(false)
-  const [hasCustomPanelImage, setHasCustomPanelImage] = useState(true)
+  const [negativeMode, setNegativeMode] = useState(false)
   const contactCardRef = useRef(null)
 
   const openContact = () => {
@@ -68,6 +82,10 @@ export default function App() {
     setContactExpanded(false)
   }
 
+  const handleContactMouseLeave = () => {
+    setCursorVisible(false)
+  }
+
   // Play / reset manual SplitText items when card expands or collapses
   useEffect(() => {
     const card = contactCardRef.current
@@ -77,6 +95,16 @@ export default function App() {
     } else {
       resetManualElements(card)
     }
+  }, [contactExpanded])
+
+  useEffect(() => {
+    if (!contactExpanded) return
+
+    const timeoutId = window.setTimeout(() => {
+      unicornSceneRef.current?.resize?.()
+    }, 700)
+
+    return () => window.clearTimeout(timeoutId)
   }, [contactExpanded])
 
   // Close on click outside — only active when expanded
@@ -111,12 +139,8 @@ export default function App() {
     return () => window.removeEventListener('mousemove', handler)
   }, [])
 
-  const handleCustomPanelImageError = () => {
-    setHasCustomPanelImage(false)
-  }
-
   return (
-    <>
+    <div className={`site-shell${negativeMode ? ' is-negative' : ''}`}>
       {/* ── Custom expand cursor — screen space, outside scaled container ── */}
       <div
         className={`contact-expand-cursor${cursorVisible && !contactExpanded ? ' contact-expand-cursor--visible' : ''}`}
@@ -126,7 +150,7 @@ export default function App() {
         + expand
       </div>
 
-      {/* ── Scene background temporarily disabled for performance check ── */}
+      <HeroBackground />
 
       <div
         ref={containerRef}
@@ -165,7 +189,9 @@ export default function App() {
             className="role-card"
             aria-hidden="true"
           >
-            <span className="plus-deco plus-deco--animated plus-deco--top">+</span>
+            <span className="plus-deco plus-deco--animated plus-deco--top">
+              <PlusIcon className="plus-deco__icon" />
+            </span>
             <div className="role-inner">
               <div className="role-title-row">
                 <span className="bracket bracket--animated bracket--left">//</span>
@@ -178,7 +204,9 @@ export default function App() {
                 <span className="award-text-reveal">Awwwards Young Jury 25&apos;26</span>
               </p>
             </div>
-            <span className="plus-deco plus-deco--animated plus-deco--bottom">+</span>
+            <span className="plus-deco plus-deco--animated plus-deco--bottom">
+              <PlusIcon className="plus-deco__icon" />
+            </span>
           </div>
 
           <ul className="projects-list projects-list--years" aria-hidden="true">
@@ -208,26 +236,30 @@ export default function App() {
           </ul>
         </section>
 
-        {/* ── Go rage indicator (bottom-center) ── */}
-        <div className="go-rage">
-          <div className="go-rage-dot-wrap">
-            <div className="go-rage-dot" />
-          </div>
-          {/* SplitText: single-line text, slides up from below its mask */}
-          <span
-            className="go-rage-text"
-            data-split="heading"
-            data-split-delay="0.65"
-          >go rage</span>
-        </div>
-        {/* ── Center-left plus decoration ── */}
-        <span
-          className="plus-center-left"
-          aria-hidden="true"
-          data-split="heading"
-          data-split-delay="0.38"
-        >+</span>
+      </div>
 
+      {/* ── Go rage indicator (bottom-center) ── */}
+      <div
+        className="go-rage"
+        role="button"
+        tabIndex={0}
+        aria-pressed={negativeMode ? 'true' : 'false'}
+        onClick={() => setNegativeMode(prev => !prev)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            setNegativeMode(prev => !prev)
+          }
+        }}
+      >
+        <div className="go-rage-dot-wrap">
+          <div className="go-rage-dot" />
+        </div>
+        <span
+          className="go-rage-text"
+          data-split="heading"
+          data-split-delay="0.65"
+        >go rage</span>
       </div>
 
       <div className={`viewport-ui${contactExpanded ? ' contact-is-expanded' : ''}`}>
@@ -247,22 +279,23 @@ export default function App() {
           data-contact-status={contactExpanded ? 'active' : 'not-active'}
           onClick={openContact}
           onMouseEnter={() => { if (!contactExpanded) setCursorVisible(true) }}
-          onMouseLeave={() => setCursorVisible(false)}
+          onMouseLeave={handleContactMouseLeave}
         >
 
           {/* ── Collapsed view ── */}
           <div className="contact-collapsed-view">
             <div className="contact-photo-wrap">
               <img
-                src={hasCustomPanelImage ? CUSTOM_PANEL_IMAGE_URL : PORTRAIT_URL}
+                src={PORTRAIT_URL}
                 alt="Liubie Ulytskyi"
                 className="contact-photo"
-                onError={handleCustomPanelImageError}
               />
             </div>
             <div className="contact-info">
               <div className="contact-role-row">
-                <span className="plus-sm plus-sm--animated">+</span>
+                <span className="plus-sm plus-sm--animated">
+                  <PlusIcon className="plus-sm__icon" />
+                </span>
                 <span className="contact-role contact-role--animated">
                   <span className="contact-role__reveal">Creative Digital</span>
                   <span className="contact-role__reveal">Designer</span>
@@ -292,7 +325,6 @@ export default function App() {
                   data-split-delay="0.3"
                 >
                   <div className="contact-exp-role-block">
-                    <span className="contact-exp-plus" aria-hidden="true">+</span>
                     <div className="contact-exp-role-stack">
                       <span className="contact-role">Creative Digital Designer</span>
                       <span className="contact-location">Lviv, Ukraine</span>
@@ -323,20 +355,22 @@ export default function App() {
                 </p>
               </div>
 
-              <div className="contact-exp-portrait">
-                {hasCustomPanelImage ? (
-                  <img
-                    src={CUSTOM_PANEL_IMAGE_URL}
-                    alt=""
-                    className="contact-exp-portrait-main"
-                    onError={handleCustomPanelImageError}
-                  />
-                ) : (
-                  <>
-                    <img src={PORTRAIT_URL} alt="" className="contact-exp-portrait-color" />
-                    <img src={PORTRAIT_BW_URL} alt="" className="contact-exp-portrait-bw" />
-                  </>
-                )}
+              <div className="contact-exp-portrait-shell">
+                <div className="contact-exp-portrait">
+                  {contactExpanded ? (
+                    <div className="contact-exp-scene">
+                      <UnicornScene
+                        projectId="6WAmT7kZGOlZ2cCDbvYT"
+                        width="1440px"
+                        height="900px"
+                        scale={1}
+                        dpi={1.5}
+                        sdkUrl="https://cdn.jsdelivr.net/gh/hiunicornstudio/unicornstudio.js@2.1.6/dist/unicornStudio.umd.js"
+                        sceneRef={unicornSceneRef}
+                      />
+                    </div>
+                  ) : null}
+                </div>
               </div>
             </div>
 
@@ -373,6 +407,6 @@ export default function App() {
           </div>
         </div>
       </div>
-    </>
+    </div>
   )
 }

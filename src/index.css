@@ -30,6 +30,17 @@ html, body, #root {
   position: relative;
 }
 
+.site-shell {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transition: filter 0.35s ease;
+}
+
+.site-shell.is-negative {
+  filter: invert(1) hue-rotate(180deg);
+}
+
 /* ─── Unicorn Studio background — fixed, fills true viewport ── */
 .unicorn-bg {
   position: fixed;
@@ -40,8 +51,19 @@ html, body, #root {
   overflow: hidden;
 }
 
+.unicorn-bg > * {
+  width: 100vw !important;
+  height: 100vh !important;
+}
+
 /* Canvas fills the fixed wrapper; SDK controls pixel dimensions via attributes */
 .unicorn-bg canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.unicorn-bg iframe {
   width: 100%;
   height: 100%;
   display: block;
@@ -259,11 +281,24 @@ html, body, #root {
   z-index: 10;
 }
 
-.role-card .plus-deco {
+.plus-icon {
   display: block;
-  text-align: center;
   width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.role-card .plus-deco {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  height: 6px;
   opacity: 0.7;
+}
+
+.role-card .plus-deco__icon {
+  width: 6px;
+  height: 6px;
 }
 
 .role-card .plus-deco.plus-deco--animated,
@@ -373,8 +408,8 @@ html, body, #root {
 /* ─── Contact card ───────────────────────────────────────── */
 .contact-card {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 6px;
+  right: 6px;
   background: #000;
   padding: 6px;
   /* Expansion system — stacks collapsed + expanded views vertically,
@@ -404,6 +439,7 @@ html, body, #root {
   min-width: 480px;
   max-width: 480px;
   max-height: 780px;
+  gap: 0;
   cursor: auto;
 }
 
@@ -444,12 +480,16 @@ html, body, #root {
 }
 
 .plus-sm {
-  font-size: 10px;
+  display: inline-flex;
+  width: 6px;
+  height: 6px;
   opacity: 0.7;
   flex-shrink: 0;
-  font-family: 'PP Editorial', serif;
-  font-weight: 300;
-  line-height: 1.4;
+}
+
+.plus-sm__icon {
+  width: 6px;
+  height: 6px;
 }
 
 .plus-sm--animated {
@@ -492,8 +532,8 @@ html, body, #root {
   font-family: 'PP Editorial', serif;
   font-weight: 300;
   font-size: 16px;
-  line-height: 0.85;
-  --swap-line-box: 0.82em;
+  line-height: 0.95;
+  --swap-line-box: 0.96em;
   color: white;
   text-decoration: none;
   position: relative;
@@ -518,6 +558,11 @@ html, body, #root {
   height: var(--swap-line-box, 1em);
   overflow: hidden;
   line-height: 1;
+}
+
+.email-link .swap-text::before,
+.email-link .swap-text::after {
+  padding-top: 0.03em;
 }
 
 .swap-text::before,
@@ -597,14 +642,18 @@ html, body, #root {
 
 /* ─── Go Rage ────────────────────────────────────────────── */
 .go-rage {
-  position: absolute;
+  position: fixed;
   bottom: 10px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse;
   align-items: center;
   gap: 6px;
+  cursor: pointer;
+  pointer-events: auto;
+  user-select: none;
+  z-index: 4;
 }
 
 .go-rage-dot-wrap {
@@ -649,6 +698,11 @@ html, body, #root {
   letter-spacing: 0;
 }
 
+.go-rage:focus-visible {
+  outline: 1px solid rgba(255, 255, 255, 0.7);
+  outline-offset: 4px;
+}
+
 /* ─── Disciplines horizontal ticker ─────────────────────── */
 .disciplines-ticker {
   position: absolute;
@@ -687,21 +741,6 @@ html, body, #root {
 @keyframes ticker-left {
   0%   { transform: translateX(0); }
   100% { transform: translateX(-50%); }
-}
-
-/* ─── Center-left plus ───────────────────────────────────── */
-.plus-center-left {
-  position: absolute;
-  top: 50%;
-  left: 14px;
-  transform: translateY(-50%);
-  font-family: 'PP Editorial', serif;
-  font-weight: 300;
-  font-size: 16px;
-  line-height: 0.85;
-  color: white;
-  mix-blend-mode: difference;
-  pointer-events: none;
 }
 
 /* ─── Contact card: collapsed view ──────────────────────── */
@@ -759,8 +798,9 @@ html, body, #root {
 .contact-exp-inner {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 0;
   width: 100%;
+  box-sizing: border-box;
 }
 
 .contact-exp-top {
@@ -776,6 +816,7 @@ html, body, #root {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  align-items: flex-start;
   width: 100%;
 }
 
@@ -783,23 +824,15 @@ html, body, #root {
 .contact-exp-role-block {
   display: inline-flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 0;
   align-items: flex-start;
-}
-
-.contact-exp-plus {
-  display: block;
-  font-family: 'PP Editorial', serif;
-  font-size: 7px;
-  line-height: 1;
-  color: white;
-  opacity: 0.7;
+  padding-top: 6px;
 }
 
 .contact-exp-role-stack {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 0;
 }
 
 /* "Lviv, Ukraine" — PP Editorial 10px, only visible when expanded */
@@ -819,56 +852,60 @@ html, body, #root {
   font-family: 'PP Editorial', serif;
   font-weight: 300;
   font-size: 16px;
-  line-height: 85%;
+  line-height: 1;
   color: white;
   width: 100%;
 }
 
+.contact-bio .split-line {
+  padding-top: 0.06em;
+  padding-bottom: 0.08em;
+}
+
 /* ─── Expanded portrait section ─────────────────────────── */
-.contact-exp-portrait {
-  height: 422px;
-  overflow: hidden;
-  position: relative;
+.contact-exp-portrait-shell {
   width: 100%;
   flex-shrink: 0;
 }
 
-.contact-exp-portrait-main {
+.contact-exp-portrait {
+  height: 332px;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+  background: #000;
+}
+
+.contact-exp-scene {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: center;
-  pointer-events: none;
+  overflow: hidden;
 }
 
-.contact-exp-portrait-color {
+.contact-exp-scene > * {
+  width: 148% !important;
+  height: 148% !important;
   position: absolute;
-  bottom: -22px;
-  left: -16px;
-  width: 498px;
-  height: 664px;
-  object-fit: cover;
-  pointer-events: none;
-}
-
-.contact-exp-portrait-bw {
-  position: absolute;
-  bottom: -107px;
+  top: 0;
   left: 0;
-  width: 464px;
-  height: 618px;
-  object-fit: cover;
-  mix-blend-mode: difference;
-  pointer-events: none;
+  transform: scale(0.68);
+  transform-origin: left top;
+}
+
+.contact-exp-scene canvas,
+.contact-exp-scene iframe {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
 }
 
 /* ─── Close button ───────────────────────────────────────── */
 .contact-close-btn {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 6px;
+  right: 6px;
   width: 20px;
   height: 20px;
   background: red;
@@ -927,16 +964,14 @@ html, body, #root {
 .projects-list,
 .social-links,
 .go-rage,
-.disciplines-ticker,
-.plus-center-left {
+.disciplines-ticker {
   transition: opacity 0.7s cubic-bezier(0.5, 0.5, 0, 1);
 }
 
 .viewport-ui.contact-is-expanded .hero-logo,
 .contact-is-expanded .projects-stage,
 .contact-is-expanded .projects-list,
-.contact-is-expanded .go-rage,
-.contact-is-expanded .plus-center-left {
+.contact-is-expanded .go-rage {
   opacity: 0.3;
 }
 
